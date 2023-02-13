@@ -1,0 +1,4 @@
+usd-rs/target
+usd-rs/cusd.o
+usd-rs/libcusd.a
+usd-rs/perf*
