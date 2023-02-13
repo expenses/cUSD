@@ -8,26 +8,25 @@ fn main() {
 
     dbg!(&filename, &c_filename);
 
-    let ptr = c_filename.as_ptr();
-
-    let stage = unsafe { bindings::cusd_Stage_open(ptr) };
+    let stage = Stage::open(&c_filename);
 
     let mut cache = XformCache::new();
 
-    let mut iterator = PrimIterator {
-        inner: unsafe { bindings::cusd_Stage_iter_prims(stage) },
-    };
+    const X: &'static [u8] = b"faceVarying\0";
 
-    for prim in iterator {
+    let ex = Token::new(X);
+
+
+    for prim in stage.iter_prims() {
         let type_name = prim.get_type_name();
 
         if type_name.to_bytes() == b"Sphere" {
             let display_colours = prim
-                .get_attribute(b"primvars:displayColor\0")
+                .get_attribute(&Token::new(b"primvars:displayColor\0")).unwrap()
                 .get_vec3f_array();
-            //dbg!(&display_colours.slice());
+            dbg!(&display_colours.slice());
         } else if type_name.to_bytes() == b"Mesh" {
-            for prim in prim.get_all_subsets().slice() {
+            /*for prim in prim.get_all_subsets().slice() {
                 let mat = prim.compute_bound_material();
 
                 let mut source = match mat.compute_surface_shader() {
@@ -43,9 +42,9 @@ fn main() {
                 let texture_input = source.get_input(b"file\0");
                 let string = texture_input.get_resolved_path();
                 if !string.str().is_empty() { 
-                    dbg!(&string.str());
+                    //dbg!(&string.str());
                 }
-            }
+            }*/
 
             let mat = prim.compute_bound_material();
 
@@ -55,12 +54,12 @@ fn main() {
                 None => continue
             };
 
-            let diffuse_input = source.get_input(b"diffuseColor\0");
+            let diffuse_input = source.get_input(&Token::new(b"diffuseColor\0"));
             let connected_sources = diffuse_input.get_all_connected_sources();
             let slice = connected_sources.slice();
             source = slice[0].source();
 
-            let texture_input = source.get_input(b"file\0");
+            let texture_input = source.get_input(&Token::new(b"file\0"));
             let string = texture_input.get_resolved_path();
                 if !string.str().is_empty() { 
                     dbg!(&string.str());
@@ -68,17 +67,40 @@ fn main() {
             //let prim = diffuse_input.get_prim();
             //dbg!(&prim.get_type_name());
 
-            /*let vertex_counts = prim.get_attribute(b"faceVertexCounts\0").get_int_array();
-            let vertex_indices = prim.get_attribute(b"faceVertexIndices\0").get_int_array();
-            dbg!(vertex_counts.slice().len(), vertex_indices.slice().len());
+            let vertex_counts = prim.get_attribute(&Token::new(b"faceVertexCounts\0")).unwrap().get_int_array();
+            let vertex_indices = prim.get_attribute(&Token::new(b"faceVertexIndices\0")).unwrap().get_int_array();
+            let uvs = prim.get_attribute(&Token::new(b"primvars:UVMap\0")).is_some();//.get_vec2f_array();
+            let normals = prim.get_attribute(&Token::new(b"normals\0")).unwrap();//.get_vec3f_array();
+            let points = prim.get_attribute(&Token::new(b"points\0")).unwrap().get_vec3f_array();
 
-
+            //dbg!(normals.get_token_metadata(&Token::new(b"interpolation\0")).unwrap().equal(&ex));
+            //dbg!(vertex_counts.slice().len(), vertex_indices.slice().len(), uvs.slice().len() / 2, normals.slice().len() / 3, points.slice().len() / 3);
 
             for subset in prim.get_all_subsets().slice() {
                 //dbg!(subset.get_indices_attr().get_int_array().slice().len());
-            }*/
+            }
         } else {
             //dbg!(&type_name);
+        }
+    }
+}
+
+struct Stage {
+    inner: *mut bindings::cusd_Stage,
+}
+
+impl Stage {
+    fn open(filename: &std::ffi::CStr) -> Self {
+        Self {
+            inner: unsafe {
+                bindings::cusd_Stage_open(filename.as_ptr())
+            }
+        }
+    }
+
+    fn iter_prims(&self) -> PrimIterator {
+        PrimIterator {
+            inner: unsafe { bindings::cusd_Stage_iter_prims(self.inner) },
         }
     }
 }
@@ -149,10 +171,10 @@ struct Shader {
 }
 
 impl Shader {
-    fn get_input(&self, name: &[u8]) -> ShadeInput {
+    fn get_input(&self, name: &Token) -> ShadeInput {
         ShadeInput {
             inner: unsafe {
-                bindings::cusd_ShadeShader_get_input(&self.inner, name.as_ptr() as *const i8)
+                bindings::cusd_ShadeShader_get_input(&self.inner, &name.inner)
             },
         }
     }
@@ -243,6 +265,19 @@ impl Vec3fArray {
     }
 }
 
+struct Vec2fArray {
+    inner: bindings::cusd_Vec2fArray,
+}
+
+impl Vec2fArray {
+    fn slice<'a>(&'a self) -> &'a [f32] {
+        let pointer = unsafe { bindings::cusd_Vec2fArray_pointer(&self.inner) };
+        let size = unsafe { bindings::cusd_Vec2fArray_size(&self.inner) };
+
+        unsafe { std::slice::from_raw_parts(pointer, size * 2) }
+    }
+}
+
 struct IntArray {
     inner: bindings::cusd_IntArray,
 }
@@ -256,6 +291,8 @@ impl IntArray {
     }
 }
 
+#[repr(transparent)]
+#[derive(Debug)]
 struct Attribute {
     inner: bindings::cusd_Attribute,
 }
@@ -264,6 +301,12 @@ impl Attribute {
     fn get_vec3f_array(&self) -> Vec3fArray {
         Vec3fArray {
             inner: unsafe { bindings::cusd_Attribute_get_vec3f_array(&self.inner) },
+        }
+    }
+
+    fn get_vec2f_array(&self) -> Vec2fArray {
+        Vec2fArray {
+            inner: unsafe { bindings::cusd_Attribute_get_vec2f_array(&self.inner) },
         }
     }
 
@@ -276,6 +319,20 @@ impl Attribute {
     fn get_type_name(&self) -> &std::ffi::CStr {
         unsafe { std::ffi::CStr::from_ptr(bindings::cusd_Attribute_get_type_name(&self.inner)) }
     }
+
+    fn get_token_metadata(&self, name: &Token) -> Option<Token> {
+        let mut token = Default::default();
+
+        let valid = unsafe {
+            bindings::cusd_Attribute_get_token_metadata(&self.inner, &name.inner, &mut token)
+        };
+
+        if valid {
+            Some(Token{inner: token})
+        } else {
+            None
+        }
+    }
 }
 
 struct Prim {
@@ -287,11 +344,17 @@ impl Prim {
         unsafe { std::ffi::CStr::from_ptr(bindings::cusd_Prim_get_type_name(&self.inner)) }
     }
 
-    fn get_attribute(&self, name: &[u8]) -> Attribute {
-        Attribute {
-            inner: unsafe {
-                bindings::cusd_Prim_get_attribute(&self.inner, name.as_ptr() as *const i8)
-            },
+    fn get_attribute(&self, name: &Token) -> Option<Attribute> {
+        let mut attribute = Default::default();
+
+        let valid = unsafe {
+            bindings::cusd_Prim_get_attribute(&self.inner, &name.inner, &mut attribute)
+        };
+
+        if valid {
+            Some(Attribute { inner: attribute})
+        } else {
+            None
         }
     }
 
@@ -329,5 +392,34 @@ impl XformCache {
             )
         };
         transform
+    }
+}
+
+struct Token {
+    inner: bindings::cusd_Token,
+}
+
+impl Token {
+    fn new(text: &[u8]) -> Self {
+        Self {
+            inner: unsafe {
+                // todo: this deref is a hack.
+                *bindings::cusd_Token_new(text.as_ptr() as *const _)
+            }
+        }
+    }
+
+    fn str<'a>(&'a self) -> &'a str {
+        let pointer = unsafe { bindings::cusd_Token_pointer(&self.inner) };
+        let size = unsafe { bindings::cusd_Token_size(&self.inner) };
+
+        std::str::from_utf8(unsafe { std::slice::from_raw_parts(pointer as *const u8, size) })
+            .unwrap()
+    }
+
+    fn equal(&self, other: &Self) -> bool {
+        unsafe {
+            bindings::cusd_Token_equal(&self.inner, &other.inner)
+        }
     }
 }

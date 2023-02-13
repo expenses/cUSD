@@ -42,6 +42,10 @@ struct cusd_Vec3fArray {
     pxr::VtArray<pxr::GfVec3f> inner;
 };
 
+struct cusd_Vec2fArray {
+    pxr::VtArray<pxr::GfVec2f> inner;
+};
+
 struct cusd_ShadeMaterial {
     pxr::UsdShadeMaterial inner;
 };
@@ -72,6 +76,10 @@ struct cusd_ShadeConnectionSourceInfo {
 
 struct cusd_String {
     std::string inner;
+};
+
+struct cusd_Token {
+    pxr::TfToken inner;
 };
 
 cusd_Stage* cusd_Stage_open(const char* filename) {
@@ -107,10 +115,15 @@ const char* cusd_Attribute_get_type_name(const cusd_Attribute& attribute) {
     return attribute.inner.GetTypeName().GetCPPTypeName().data();
 }
 
-cusd_Attribute cusd_Prim_get_attribute(const cusd_Prim& prim, const char* name) {
-    return {
-        .inner = prim.inner.GetAttribute(pxr::TfToken(name))
-    };
+bool cusd_Prim_get_attribute(const cusd_Prim& prim, const cusd_Token& token, cusd_Attribute& out_attribute) {
+    auto attribute = prim.inner.GetAttribute(token.inner);
+    if (!attribute) {
+        return false;
+    }
+
+    out_attribute.inner = attribute;
+
+    return true;
 }
 
 double cusd_Attribute_get_double(const cusd_Attribute& attribute) {
@@ -132,6 +145,10 @@ cusd_IntArray cusd_Attribute_get_int_array(const cusd_Attribute& attribute) {
     pxr::VtArray<int> value;
     attribute.inner.Get(&value);
     return { .inner = value };
+}
+
+bool cusd_Attribute_get_token_metadata(const cusd_Attribute& attribute, const cusd_Token& name, cusd_Token& out_token) {
+    return attribute.inner.GetMetadata(name.inner, &out_token.inner);
 }
 
 size_t cusd_IntArray_size(const cusd_IntArray& array) {
@@ -156,6 +173,20 @@ const float* cusd_Vec3fArray_pointer(const cusd_Vec3fArray& array) {
     return (float*) array.inner.data();
 }
 
+cusd_Vec2fArray cusd_Attribute_get_vec2f_array(const cusd_Attribute& attribute) {
+    pxr::VtArray<pxr::GfVec2f> value;
+    attribute.inner.Get(&value);
+    return { .inner = value };
+}
+
+size_t cusd_Vec2fArray_size(const cusd_Vec2fArray& array) {
+    return array.inner.size();
+}
+
+const float* cusd_Vec2fArray_pointer(const cusd_Vec2fArray& array) {
+    return (float*) array.inner.data();
+}
+
 cusd_ShadeMaterial cusd_Prim_compute_bound_material(const cusd_Prim& prim) {
     auto api = pxr::UsdShadeMaterialBindingAPI(prim.inner);
     auto material = api.ComputeBoundMaterial(pxr::UsdShadeTokens->full);
@@ -177,9 +208,9 @@ bool cusd_ShadeMaterial_compute_surface_source(const cusd_ShadeMaterial& materia
     return true;
 } 
 
-cusd_ShadeInput cusd_ShadeShader_get_input(const cusd_ShadeShader& shader, const char* name) {
+cusd_ShadeInput cusd_ShadeShader_get_input(const cusd_ShadeShader& shader, const cusd_Token& name) {
     return {
-        .inner = shader.inner.GetInput(pxr::TfToken(name))
+        .inner = shader.inner.GetInput(name.inner)
     };
 }
 
@@ -233,6 +264,25 @@ const char* cusd_String_pointer(const cusd_String& string) {
 
 size_t cusd_String_size(const cusd_String& string) {
     return string.inner.size();
+}
+
+const char* cusd_Token_pointer(const cusd_Token& token) {
+    return token.inner.data();
+}
+
+size_t cusd_Token_size(const cusd_Token& token) {
+    return token.inner.size();
+}
+
+cusd_Token* cusd_Token_new(const char* text) {
+    // todo: had problems without this `new`.
+    return new cusd_Token {
+        .inner = pxr::TfToken(text)
+    };
+}
+
+bool cusd_Token_equal(const cusd_Token& a, const cusd_Token& b) {
+    return a.inner == b.inner;
 }
 
 }

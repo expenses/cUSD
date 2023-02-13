@@ -136,6 +136,25 @@ fn bindgen_test_layout_cusd_Vec3fArray() {
 #[repr(C)]
 #[repr(align(8))]
 #[derive(Debug, Default, Copy, Clone)]
+pub struct cusd_Vec2fArray {
+    pub _bindgen_opaque_blob: [u64; 5usize],
+}
+#[test]
+fn bindgen_test_layout_cusd_Vec2fArray() {
+    assert_eq!(
+        ::std::mem::size_of::<cusd_Vec2fArray>(),
+        40usize,
+        concat!("Size of: ", stringify!(cusd_Vec2fArray))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<cusd_Vec2fArray>(),
+        8usize,
+        concat!("Alignment of ", stringify!(cusd_Vec2fArray))
+    );
+}
+#[repr(C)]
+#[repr(align(8))]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct cusd_ShadeMaterial {
     pub _bindgen_opaque_blob: [u64; 3usize],
 }
@@ -285,6 +304,25 @@ fn bindgen_test_layout_cusd_String() {
         concat!("Alignment of ", stringify!(cusd_String))
     );
 }
+#[repr(C)]
+#[repr(align(8))]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct cusd_Token {
+    pub _bindgen_opaque_blob: u64,
+}
+#[test]
+fn bindgen_test_layout_cusd_Token() {
+    assert_eq!(
+        ::std::mem::size_of::<cusd_Token>(),
+        8usize,
+        concat!("Size of: ", stringify!(cusd_Token))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<cusd_Token>(),
+        8usize,
+        concat!("Alignment of ", stringify!(cusd_Token))
+    );
+}
 extern "C" {
     pub fn cusd_Stage_open(filename: *const ::std::os::raw::c_char) -> *mut cusd_Stage;
 }
@@ -308,8 +346,9 @@ extern "C" {
 extern "C" {
     pub fn cusd_Prim_get_attribute(
         prim: *const cusd_Prim,
-        name: *const ::std::os::raw::c_char,
-    ) -> cusd_Attribute;
+        token: *const cusd_Token,
+        out_attribute: *mut cusd_Attribute,
+    ) -> bool;
 }
 extern "C" {
     pub fn cusd_Attribute_get_double(attribute: *const cusd_Attribute) -> f64;
@@ -328,6 +367,13 @@ extern "C" {
     pub fn cusd_Attribute_get_int_array(attribute: *const cusd_Attribute) -> cusd_IntArray;
 }
 extern "C" {
+    pub fn cusd_Attribute_get_token_metadata(
+        attribute: *const cusd_Attribute,
+        name: *const cusd_Token,
+        out_token: *mut cusd_Token,
+    ) -> bool;
+}
+extern "C" {
     pub fn cusd_IntArray_size(array: *const cusd_IntArray) -> usize;
 }
 extern "C" {
@@ -341,6 +387,15 @@ extern "C" {
 }
 extern "C" {
     pub fn cusd_Vec3fArray_pointer(array: *const cusd_Vec3fArray) -> *const f32;
+}
+extern "C" {
+    pub fn cusd_Attribute_get_vec2f_array(attribute: *const cusd_Attribute) -> cusd_Vec2fArray;
+}
+extern "C" {
+    pub fn cusd_Vec2fArray_size(array: *const cusd_Vec2fArray) -> usize;
+}
+extern "C" {
+    pub fn cusd_Vec2fArray_pointer(array: *const cusd_Vec2fArray) -> *const f32;
 }
 extern "C" {
     pub fn cusd_Prim_compute_bound_material(prim: *const cusd_Prim) -> cusd_ShadeMaterial;
@@ -359,7 +414,7 @@ extern "C" {
 extern "C" {
     pub fn cusd_ShadeShader_get_input(
         shader: *const cusd_ShadeShader,
-        name: *const ::std::os::raw::c_char,
+        name: *const cusd_Token,
     ) -> cusd_ShadeInput;
 }
 extern "C" {
@@ -403,4 +458,16 @@ extern "C" {
 }
 extern "C" {
     pub fn cusd_String_size(string: *const cusd_String) -> usize;
+}
+extern "C" {
+    pub fn cusd_Token_pointer(token: *const cusd_Token) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn cusd_Token_size(token: *const cusd_Token) -> usize;
+}
+extern "C" {
+    pub fn cusd_Token_new(text: *const ::std::os::raw::c_char) -> *mut cusd_Token;
+}
+extern "C" {
+    pub fn cusd_Token_equal(a: *const cusd_Token, b: *const cusd_Token) -> bool;
 }
