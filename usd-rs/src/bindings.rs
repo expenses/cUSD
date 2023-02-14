@@ -323,6 +323,44 @@ fn bindgen_test_layout_cusd_Token() {
         concat!("Alignment of ", stringify!(cusd_Token))
     );
 }
+#[repr(C)]
+#[repr(align(8))]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct cusd_LayerVector {
+    pub _bindgen_opaque_blob: [u64; 3usize],
+}
+#[test]
+fn bindgen_test_layout_cusd_LayerVector() {
+    assert_eq!(
+        ::std::mem::size_of::<cusd_LayerVector>(),
+        24usize,
+        concat!("Size of: ", stringify!(cusd_LayerVector))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<cusd_LayerVector>(),
+        8usize,
+        concat!("Alignment of ", stringify!(cusd_LayerVector))
+    );
+}
+#[repr(C)]
+#[repr(align(8))]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct cusd_Layer {
+    pub _bindgen_opaque_blob: [u64; 2usize],
+}
+#[test]
+fn bindgen_test_layout_cusd_Layer() {
+    assert_eq!(
+        ::std::mem::size_of::<cusd_Layer>(),
+        16usize,
+        concat!("Size of: ", stringify!(cusd_Layer))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<cusd_Layer>(),
+        8usize,
+        concat!("Alignment of ", stringify!(cusd_Layer))
+    );
+}
 extern "C" {
     pub fn cusd_Stage_open(filename: *const ::std::os::raw::c_char) -> *mut cusd_Stage;
 }
@@ -330,7 +368,37 @@ extern "C" {
     pub fn cusd_Stage_iter_prims(stage: *const cusd_Stage) -> cusd_PrimRange;
 }
 extern "C" {
+    pub fn cusd_Stage_reload(stage: *const cusd_Stage);
+}
+extern "C" {
+    pub fn cusd_Stage_free(stage: *const cusd_Stage);
+}
+extern "C" {
+    pub fn cusd_Stage_get_used_layers(stage: *const cusd_Stage) -> cusd_LayerVector;
+}
+extern "C" {
+    pub fn cusd_LayerVector_pointer(layers: *const cusd_LayerVector) -> *mut cusd_Layer;
+}
+extern "C" {
+    pub fn cusd_Layer_get_path(layer: *const cusd_Layer, out_string: *mut cusd_String) -> bool;
+}
+extern "C" {
+    pub fn cusd_Layer_reload(layer: *const cusd_Layer) -> bool;
+}
+extern "C" {
+    pub fn cusd_Layer_free(layer: *const cusd_Layer);
+}
+extern "C" {
+    pub fn cusd_LayerVector_size(layers: *const cusd_LayerVector) -> usize;
+}
+extern "C" {
     pub fn cusd_PrimRange_is_empty(iterator: *const cusd_PrimRange) -> bool;
+}
+extern "C" {
+    pub fn cusd_PrimRange_free(iterator: *const cusd_PrimRange);
+}
+extern "C" {
+    pub fn cusd_LayerVector_free(vector: *const cusd_LayerVector);
 }
 extern "C" {
     pub fn cusd_PrimRange_next(iterator: *mut cusd_PrimRange) -> cusd_Prim;
@@ -339,9 +407,15 @@ extern "C" {
     pub fn cusd_Prim_get_type_name(prim: *const cusd_Prim) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
+    pub fn cusd_Prim_free(prim: *const cusd_Prim);
+}
+extern "C" {
     pub fn cusd_Attribute_get_type_name(
         attribute: *const cusd_Attribute,
     ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn cusd_Attribute_free(attribute: *const cusd_Attribute);
 }
 extern "C" {
     pub fn cusd_Prim_get_attribute(
@@ -364,6 +438,9 @@ extern "C" {
     );
 }
 extern "C" {
+    pub fn cusd_GeomXformCache_free(cache: *const cusd_GeomXformCache);
+}
+extern "C" {
     pub fn cusd_Attribute_get_int_array(attribute: *const cusd_Attribute) -> cusd_IntArray;
 }
 extern "C" {
@@ -380,6 +457,9 @@ extern "C" {
     pub fn cusd_IntArray_pointer(array: *const cusd_IntArray) -> *const ::std::os::raw::c_int;
 }
 extern "C" {
+    pub fn cusd_IntArray_free(array: *const cusd_IntArray);
+}
+extern "C" {
     pub fn cusd_Attribute_get_vec3f_array(attribute: *const cusd_Attribute) -> cusd_Vec3fArray;
 }
 extern "C" {
@@ -389,6 +469,9 @@ extern "C" {
     pub fn cusd_Vec3fArray_pointer(array: *const cusd_Vec3fArray) -> *const f32;
 }
 extern "C" {
+    pub fn cusd_Vec3fArray_free(array: *const cusd_Vec3fArray);
+}
+extern "C" {
     pub fn cusd_Attribute_get_vec2f_array(attribute: *const cusd_Attribute) -> cusd_Vec2fArray;
 }
 extern "C" {
@@ -396,6 +479,9 @@ extern "C" {
 }
 extern "C" {
     pub fn cusd_Vec2fArray_pointer(array: *const cusd_Vec2fArray) -> *const f32;
+}
+extern "C" {
+    pub fn cusd_Vec2fArray_free(array: *const cusd_Vec2fArray);
 }
 extern "C" {
     pub fn cusd_Prim_compute_bound_material(prim: *const cusd_Prim) -> cusd_ShadeMaterial;
@@ -412,18 +498,31 @@ extern "C" {
     ) -> bool;
 }
 extern "C" {
+    pub fn cusd_ShadeMaterial_free(material: *const cusd_ShadeMaterial);
+}
+extern "C" {
     pub fn cusd_ShadeShader_get_input(
         shader: *const cusd_ShadeShader,
         name: *const cusd_Token,
-    ) -> cusd_ShadeInput;
+        out_input: *mut cusd_ShadeInput,
+    ) -> bool;
 }
 extern "C" {
-    pub fn cusd_ShadeInput_get_resolved_path(input: *const cusd_ShadeInput) -> cusd_String;
+    pub fn cusd_ShadeShader_free(shader: *const cusd_ShadeShader);
+}
+extern "C" {
+    pub fn cusd_ShadeInput_get_resolved_path(
+        input: *const cusd_ShadeInput,
+        out_path: *mut cusd_String,
+    ) -> bool;
 }
 extern "C" {
     pub fn cusd_ShadeInput_get_connected_sources(
         input: *const cusd_ShadeInput,
     ) -> cusd_ShadeSourceInfoVector;
+}
+extern "C" {
+    pub fn cusd_ShadeInput_free(input: *const cusd_ShadeInput);
 }
 extern "C" {
     pub fn cusd_Prim_get_all_subsets(prim: *const cusd_Prim) -> cusd_GeomSubsetVector;
@@ -437,7 +536,13 @@ extern "C" {
     ) -> *const cusd_GeomSubset;
 }
 extern "C" {
+    pub fn cusd_GeomSubsetVector_free(vector: *const cusd_GeomSubsetVector);
+}
+extern "C" {
     pub fn cusd_GeomSubset_get_indices_attr(subset: *const cusd_GeomSubset) -> cusd_Attribute;
+}
+extern "C" {
+    pub fn cusd_GeomSubset_free(subset: *const cusd_GeomSubset);
 }
 extern "C" {
     pub fn cusd_ShadeSourceInfoVector_size(source_info: *const cusd_ShadeSourceInfoVector)
@@ -449,9 +554,15 @@ extern "C" {
     ) -> *mut cusd_ShadeConnectionSourceInfo;
 }
 extern "C" {
+    pub fn cusd_ShadeSourceInfoVector_free(vector: *const cusd_ShadeSourceInfoVector);
+}
+extern "C" {
     pub fn cusd_ShadeConnectionSourceInfo_source(
         source_info: *const cusd_ShadeConnectionSourceInfo,
     ) -> cusd_ShadeShader;
+}
+extern "C" {
+    pub fn cusd_ShadeConnectionSourceInfo_free(source_info: *const cusd_ShadeConnectionSourceInfo);
 }
 extern "C" {
     pub fn cusd_String_pointer(string: *const cusd_String) -> *const ::std::os::raw::c_char;
@@ -460,10 +571,16 @@ extern "C" {
     pub fn cusd_String_size(string: *const cusd_String) -> usize;
 }
 extern "C" {
+    pub fn cusd_String_free(string: *const cusd_String);
+}
+extern "C" {
     pub fn cusd_Token_pointer(token: *const cusd_Token) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
     pub fn cusd_Token_size(token: *const cusd_Token) -> usize;
+}
+extern "C" {
+    pub fn cusd_Token_free(token: *const cusd_Token);
 }
 extern "C" {
     pub fn cusd_Token_new(text: *const ::std::os::raw::c_char) -> *mut cusd_Token;

@@ -1,87 +1,36 @@
-extern crate bindgen;
-
-use std::env;
 use std::path::PathBuf;
 
 fn main() {
-    let usd_lib_path = "../../external/usd/lib";
-    let usd_include_path = "../../external/usd/include";
+    let usd_lib_path = PathBuf::from(std::env::var("USD_LIB_PATH").expect("Missing USD_LIB_PATH"));
+    let usd_include_path = std::env::var("USD_INCLUDE_PATH").expect("Missing USD_INCLUDE_PATH");
 
-    // Tell cargo to look for shared libraries in the specified directory
-    println!(
-        "cargo:rustc-link-search={}",
-        PathBuf::from(".").canonicalize().unwrap().display()
-    );
-    println!(
-        "cargo:rustc-link-search={}",
-        PathBuf::from(usd_lib_path)
-            .canonicalize()
-            .unwrap()
-            .display()
-    );
+    cc::Build::new()
+        .cpp(true)
+        .file("../cusd.cpp")
+        .include(&usd_include_path)
+        // libusd_usdShade.so references all the others so we only really need to link
+        // that, but let's be a bit more explicit.
+        .object(usd_lib_path.join("libusd_usd.so"))
+        .object(usd_lib_path.join("libusd_usdGeom.so"))
+        .object(usd_lib_path.join("libusd_usdShade.so"))
+        .warnings(false)
+        .compile("cusd");
 
-    let link_libs = [
-        //"static=stdc++",
-        "cusd",
-        "usd_usdGeom",
-        "usd_usd",
-        "usd_sdf",
-        "usd_vt",
-        "usd_gf",
-        "usd_tf",
-        "usd_usdLux",
-        "usd_usdShade",
-    ];
+    let header_filename = PathBuf::from("../cusd.hpp").canonicalize().unwrap();
+    let header_filename_str = header_filename.to_str().unwrap();
 
-    for link_lib in link_libs {
-        println!("cargo:rustc-link-lib={}", link_lib);
-    }
+    println!("cargo:rerun-if-changed={}", header_filename_str);
 
-    println!("cargo:rustc-link-lib=static=stdc++");
-
-    if !std::process::Command::new("clang")
-        .arg("-c")
-        .arg("-o")
-        .arg("cusd.o")
-        .arg("../cusd.cpp")
-        .arg(&format!("-I{}", usd_include_path))
-        .arg("-O3")
-        .output()
-        .expect("could not spawn `clang`")
-        .status
-        .success()
-    {
-        // Panic if the command was not successful.
-        panic!("could not compile object file");
-    }
-
-    if !std::process::Command::new("ar")
-        .arg("rcs")
-        .arg("libcusd.a")
-        .arg("cusd.o")
-        .output()
-        .expect("could not spawn `ar`")
-        .status
-        .success()
-    {
-        // Panic if the command was not successful.
-        panic!("could not emit library file");
-    }
-
-    let bindings_filename = PathBuf::from("../cusd.hpp").canonicalize().unwrap();
-
-    println!("cargo:rerun-if-changed={}", bindings_filename.display());
-
-    let mut builder = bindgen::Builder::default()
-        .header(&format!("{}", bindings_filename.display()))
+    let bindings = bindgen::Builder::default()
+        .header(header_filename_str)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .allowlist_var("cusd_.*")
         .allowlist_function("cusd_.*")
         .opaque_type("cusd_.*")
         .derive_default(true)
-        .clang_arg(&format!("-I{}", usd_include_path));
-
-    let bindings = builder.generate().expect("Unable to generate bindings");
+        .clang_arg(&format!("-I{}", usd_include_path))
+        .generate()
+        .expect("Unable to generate bindings");
 
     // Write the bindings to the $OUT_DIR/bindings.rs file.
     //let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
