@@ -104,8 +104,8 @@ generate_binding!(
 );
 
 impl ShadeSourceInfo {
-    pub fn source(&self) -> ShadeShader {
-        ShadeShader {
+    pub fn source(&self) -> Prim {
+        Prim {
             inner: unsafe { cusd_ShadeConnectionSourceInfo_source(&self.inner) },
         }
     }
@@ -137,76 +137,6 @@ impl Deref for CusdString {
     }
 }
 
-generate_binding!(ShadeInput, cusd_ShadeInput, cusd_ShadeInput_free);
-
-impl ShadeInput {
-    pub fn get_all_connected_sources(&self) -> ShadeSourceInfoVector {
-        ShadeSourceInfoVector {
-            inner: unsafe { cusd_ShadeInput_get_connected_sources(&self.inner) },
-        }
-    }
-
-    pub fn get_resolved_path(&self) -> Option<CusdString> {
-        let mut path = Default::default();
-
-        let valid = unsafe { cusd_ShadeInput_get_resolved_path(&self.inner, &mut path) };
-
-        if valid {
-            Some(CusdString { inner: path })
-        } else {
-            None
-        }
-    }
-}
-
-generate_binding!(ShadeShader, cusd_ShadeShader, cusd_ShadeShader_free);
-
-impl ShadeShader {
-    pub fn get_input(&self, name: &Token) -> Option<ShadeInput> {
-        let mut input = Default::default();
-
-        let valid = unsafe { cusd_ShadeShader_get_input(&self.inner, &name.inner, &mut input) };
-
-        if valid {
-            Some(ShadeInput { inner: input })
-        } else {
-            None
-        }
-    }
-}
-
-generate_binding!(ShadeMaterial, cusd_ShadeMaterial, cusd_ShadeMaterial_free);
-
-impl ShadeMaterial {
-    pub fn compute_surface_shader(&self) -> Option<ShadeShader> {
-        let mut shader = Default::default();
-
-        let valid = unsafe { cusd_ShadeMaterial_compute_surface_source(&self.inner, &mut shader) };
-
-        if valid {
-            Some(ShadeShader { inner: shader })
-        } else {
-            None
-        }
-    }
-}
-
-generate_binding!(GeomSubset, cusd_GeomSubset, cusd_GeomSubset_free);
-
-impl GeomSubset {
-    pub fn get_indices_attr(&self) -> Attribute {
-        Attribute {
-            inner: unsafe { cusd_GeomSubset_get_indices_attr(&self.inner) },
-        }
-    }
-
-    pub fn compute_bound_material(&self) -> ShadeMaterial {
-        ShadeMaterial {
-            inner: unsafe { cusd_GeomSubset_compute_bound_material(&self.inner) },
-        }
-    }
-}
-
 generate_binding!(PrimRange, cusd_PrimRange, cusd_PrimRange_free);
 
 impl Iterator for PrimRange {
@@ -226,16 +156,26 @@ impl Iterator for PrimRange {
 }
 
 generate_binding!(
-    GeomSubsetVector,
-    cusd_GeomSubsetVector,
-    cusd_GeomSubsetVector_free
+    PrimSublingRange,
+    cusd_PrimSiblingRange,
+    cusd_PrimSiblingRange_free
 );
-deref_into_slice!(
-    GeomSubsetVector,
-    GeomSubset,
-    cusd_GeomSubsetVector_pointer,
-    cusd_GeomSubsetVector_size
-);
+
+impl Iterator for PrimSublingRange {
+    type Item = Prim;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        unsafe {
+            if cusd_PrimSiblingRange_is_empty(&self.inner) {
+                return None;
+            }
+
+            return Some(Prim {
+                inner: cusd_PrimSiblingRange_next(&mut self.inner),
+            });
+        }
+    }
+}
 
 generate_binding!(Vec3fArray, cusd_Vec3fArray, cusd_Vec3fArray_free);
 deref_into_slice!(
@@ -253,12 +193,140 @@ deref_into_slice!(
     cusd_Vec2fArray_size
 );
 
+generate_binding!(Vec3dArray, cusd_Vec3dArray, cusd_Vec3dArray_free);
+deref_into_slice!(
+    Vec3dArray,
+    f64,
+    cusd_Vec3dArray_pointer,
+    cusd_Vec3dArray_size
+);
+
+generate_binding!(Vec2dArray, cusd_Vec2dArray, cusd_Vec2dArray_free);
+deref_into_slice!(
+    Vec2dArray,
+    f64,
+    cusd_Vec2dArray_pointer,
+    cusd_Vec2dArray_size
+);
+
 generate_binding!(IntArray, cusd_IntArray, cusd_IntArray_free);
 deref_into_slice!(IntArray, i32, cusd_IntArray_pointer, cusd_IntArray_size);
 
+generate_binding!(Int64Array, cusd_Int64Array, cusd_Int64Array_free);
+deref_into_slice!(
+    Int64Array,
+    i64,
+    cusd_Int64Array_pointer,
+    cusd_Int64Array_size
+);
+
+generate_binding!(FloatArray, cusd_FloatArray, cusd_FloatArray_free);
+deref_into_slice!(
+    FloatArray,
+    f32,
+    cusd_FloatArray_pointer,
+    cusd_FloatArray_size
+);
+
 generate_binding!(Attribute, cusd_Attribute, cusd_Attribute_free);
 
+pub enum AttributeValue {
+    Vec3fArray(Vec3fArray),
+    Vec2fArray(Vec2fArray),
+    Vec3dArray(Vec3dArray),
+    Vec2dArray(Vec2dArray),
+    IntArray(IntArray),
+    Int64Array(Int64Array),
+    Token(Token),
+    FloatArray(FloatArray),
+    Bool(bool),
+    Float(f32),
+    Double(f64),
+    Vec3f([f32; 3]),
+    Vec2f([f32; 2]),
+    Vec3d([f64; 3]),
+    Vec2d([f64; 2]),
+    Int(i32),
+    String(CusdString),
+}
+
 impl Attribute {
+    pub fn get_value(&self) -> Option<AttributeValue> {
+        Some(match self.get_type_name().to_bytes() {
+            b"VtArray<int>" => AttributeValue::IntArray(self.get_int_array()),
+            b"VtArray<GfVec3f>" => AttributeValue::Vec3fArray(self.get_vec3f_array()),
+            b"VtArray<GfVec2f>" => AttributeValue::Vec2fArray(self.get_vec2f_array()),
+            b"VtArray<float>" => AttributeValue::FloatArray(self.get_float_array()),
+            b"VtArray<GfVec3d>" => AttributeValue::Vec3dArray(self.get_vec3d_array()),
+            b"VtArray<GfVec2d>" => AttributeValue::Vec2dArray(self.get_vec2d_array()),
+            b"TfToken" => AttributeValue::Token(self.get_token()),
+            b"bool" => AttributeValue::Bool(self.get_bool()),
+            b"float" => AttributeValue::Float(self.get_float()),
+            b"double" => AttributeValue::Double(self.get_double()),
+            b"GfVec3f" => AttributeValue::Vec3f(self.get_vec3f()),
+            b"GfVec2f" => AttributeValue::Vec2f(self.get_vec2f()),
+            b"GfVec3d" => AttributeValue::Vec3d(self.get_vec3d()),
+            b"GfVec2d" => AttributeValue::Vec2d(self.get_vec2d()),
+            b"int" => AttributeValue::Int(self.get_int()),
+            b"std::string" => AttributeValue::String(self.get_string()),
+            b"VtArray<int64_t>" => AttributeValue::Int64Array(self.get_int64_array()),
+            other => {
+                dbg!(std::str::from_utf8(other).unwrap());
+                return None;
+            }
+        })
+    }
+
+    pub fn get_float(&self) -> f32 {
+        unsafe { cusd_Attribute_get_float(&self.inner) }
+    }
+
+    pub fn get_double(&self) -> f64 {
+        unsafe { cusd_Attribute_get_double(&self.inner) }
+    }
+
+    pub fn get_bool(&self) -> bool {
+        unsafe { cusd_Attribute_get_bool(&self.inner) }
+    }
+
+    pub fn get_int(&self) -> i32 {
+        unsafe { cusd_Attribute_get_int(&self.inner) }
+    }
+
+    pub fn get_string(&self) -> CusdString {
+        let mut string = Default::default();
+
+        unsafe {
+            cusd_Attribute_get_string(&self.inner, &mut string);
+        }
+
+        CusdString { inner: string }
+    }
+
+    pub fn get_vec3f(&self) -> [f32; 3] {
+        let mut output = [0.0_f32; 3];
+        unsafe { cusd_Attribute_get_vec3f(&self.inner, output.as_mut_ptr()) };
+        output
+    }
+
+    pub fn get_vec2f(&self) -> [f32; 2] {
+        let mut output = [0.0_f32; 2];
+        unsafe { cusd_Attribute_get_vec2f(&self.inner, output.as_mut_ptr()) };
+        output
+    }
+
+    pub fn get_vec3d(&self) -> [f64; 3] {
+        let mut output = [0.0_f64; 3];
+        unsafe { cusd_Attribute_get_vec3d(&self.inner, output.as_mut_ptr()) };
+        output
+    }
+
+    pub fn get_vec2d(&self) -> [f64; 2] {
+        let mut output = [0.0_f64; 2];
+        unsafe { cusd_Attribute_get_vec2d(&self.inner, output.as_mut_ptr()) };
+        output
+    }
+
     pub fn get_vec3f_array(&self) -> Vec3fArray {
         Vec3fArray {
             inner: unsafe { cusd_Attribute_get_vec3f_array(&self.inner) },
@@ -271,9 +339,39 @@ impl Attribute {
         }
     }
 
+    pub fn get_vec3d_array(&self) -> Vec3dArray {
+        Vec3dArray {
+            inner: unsafe { cusd_Attribute_get_vec3d_array(&self.inner) },
+        }
+    }
+
+    pub fn get_vec2d_array(&self) -> Vec2dArray {
+        Vec2dArray {
+            inner: unsafe { cusd_Attribute_get_vec2d_array(&self.inner) },
+        }
+    }
+
     pub fn get_int_array(&self) -> IntArray {
         IntArray {
             inner: unsafe { cusd_Attribute_get_int_array(&self.inner) },
+        }
+    }
+
+    pub fn get_int64_array(&self) -> Int64Array {
+        Int64Array {
+            inner: unsafe { cusd_Attribute_get_int64_array(&self.inner) },
+        }
+    }
+
+    pub fn get_float_array(&self) -> FloatArray {
+        FloatArray {
+            inner: unsafe { cusd_Attribute_get_float_array(&self.inner) },
+        }
+    }
+
+    pub fn get_token(&self) -> Token {
+        Token {
+            inner: unsafe { *cusd_Attribute_get_token(&self.inner) },
         }
     }
 
@@ -293,7 +391,49 @@ impl Attribute {
             None
         }
     }
+
+    pub fn get_connected_shade_sources(&self) -> ShadeSourceInfoVector {
+        ShadeSourceInfoVector {
+            inner: unsafe { cusd_Attribute_get_connected_shade_sources(&self.inner) },
+        }
+    }
+
+    pub fn get_resolved_path(&self) -> Option<CusdString> {
+        let mut path = Default::default();
+
+        let valid = unsafe { cusd_Attribute_get_resolved_path(&self.inner, &mut path) };
+
+        if valid {
+            Some(CusdString { inner: path })
+        } else {
+            None
+        }
+    }
+
+    pub fn get_base_name(&self) -> Token {
+        Token {
+            inner: unsafe { *cusd_Attribute_get_base_name(&self.inner) },
+        }
+    }
+
+    pub fn get_namespace(&self) -> Token {
+        Token {
+            inner: unsafe { *cusd_Attribute_get_namespace(&self.inner) },
+        }
+    }
 }
+
+generate_binding!(
+    AttributeVector,
+    cusd_AttributeVector,
+    cusd_AttributeVector_free
+);
+deref_into_slice!(
+    AttributeVector,
+    Attribute,
+    cusd_AttributeVector_pointer,
+    cusd_AttributeVector_size
+);
 
 generate_binding!(Prim, cusd_Prim, cusd_Prim_free);
 
@@ -314,15 +454,33 @@ impl Prim {
         }
     }
 
-    pub fn compute_bound_material(&self) -> ShadeMaterial {
-        ShadeMaterial {
+    pub fn compute_bound_material(&self) -> Prim {
+        Prim {
             inner: unsafe { cusd_Prim_compute_bound_material(&self.inner) },
         }
     }
 
-    pub fn get_all_subsets(&self) -> GeomSubsetVector {
-        GeomSubsetVector {
-            inner: unsafe { cusd_Prim_get_all_subsets(&self.inner) },
+    pub fn get_all_children(&self) -> PrimSublingRange {
+        PrimSublingRange {
+            inner: unsafe { cusd_Prim_get_all_children(&self.inner) },
+        }
+    }
+
+    pub fn compute_material_surface_shader(&self) -> Option<Prim> {
+        let mut shader = Default::default();
+
+        let valid = unsafe { cusd_Prim_compute_material_surface_source(&self.inner, &mut shader) };
+
+        if valid {
+            Some(Prim { inner: shader })
+        } else {
+            None
+        }
+    }
+
+    pub fn get_attributes(&self) -> AttributeVector {
+        AttributeVector {
+            inner: unsafe { cusd_Prim_get_attributes(&self.inner) },
         }
     }
 }

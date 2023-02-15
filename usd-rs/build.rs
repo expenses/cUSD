@@ -13,7 +13,8 @@ fn main() {
         .object(usd_lib_path.join("libusd_usd.so"))
         .object(usd_lib_path.join("libusd_usdGeom.so"))
         .object(usd_lib_path.join("libusd_usdShade.so"))
-        .warnings(false)
+        .flag("-Wno-deprecated")
+        .flag("-Wno-unused-parameter")
         .compile("cusd");
 
     let header_filename = PathBuf::from("../cusd.hpp").canonicalize().unwrap();

@@ -141,6 +141,34 @@ extern "C" {
 #[repr(C)]
 #[repr(align(8))]
 #[derive(Debug, Default, Copy, Clone)]
+pub struct cusd_Int64Array {
+    pub _bindgen_opaque_blob: [u64; 5usize],
+}
+#[test]
+fn bindgen_test_layout_cusd_Int64Array() {
+    assert_eq!(
+        ::std::mem::size_of::<cusd_Int64Array>(),
+        40usize,
+        concat!("Size of: ", stringify!(cusd_Int64Array))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<cusd_Int64Array>(),
+        8usize,
+        concat!("Alignment of ", stringify!(cusd_Int64Array))
+    );
+}
+extern "C" {
+    pub fn cusd_Int64Array_free(binding: *const cusd_Int64Array);
+}
+extern "C" {
+    pub fn cusd_Int64Array_pointer(binding: *const cusd_Int64Array) -> *const i64;
+}
+extern "C" {
+    pub fn cusd_Int64Array_size(binding: *const cusd_Int64Array) -> usize;
+}
+#[repr(C)]
+#[repr(align(8))]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct cusd_Vec3fArray {
     pub _bindgen_opaque_blob: [u64; 5usize],
 }
@@ -197,120 +225,86 @@ extern "C" {
 #[repr(C)]
 #[repr(align(8))]
 #[derive(Debug, Default, Copy, Clone)]
-pub struct cusd_ShadeMaterial {
-    pub _bindgen_opaque_blob: [u64; 3usize],
+pub struct cusd_Vec3dArray {
+    pub _bindgen_opaque_blob: [u64; 5usize],
 }
 #[test]
-fn bindgen_test_layout_cusd_ShadeMaterial() {
+fn bindgen_test_layout_cusd_Vec3dArray() {
     assert_eq!(
-        ::std::mem::size_of::<cusd_ShadeMaterial>(),
-        24usize,
-        concat!("Size of: ", stringify!(cusd_ShadeMaterial))
+        ::std::mem::size_of::<cusd_Vec3dArray>(),
+        40usize,
+        concat!("Size of: ", stringify!(cusd_Vec3dArray))
     );
     assert_eq!(
-        ::std::mem::align_of::<cusd_ShadeMaterial>(),
+        ::std::mem::align_of::<cusd_Vec3dArray>(),
         8usize,
-        concat!("Alignment of ", stringify!(cusd_ShadeMaterial))
+        concat!("Alignment of ", stringify!(cusd_Vec3dArray))
     );
 }
 extern "C" {
-    pub fn cusd_ShadeMaterial_free(binding: *const cusd_ShadeMaterial);
+    pub fn cusd_Vec3dArray_free(binding: *const cusd_Vec3dArray);
+}
+extern "C" {
+    pub fn cusd_Vec3dArray_pointer(binding: *const cusd_Vec3dArray) -> *const f64;
+}
+extern "C" {
+    pub fn cusd_Vec3dArray_size(binding: *const cusd_Vec3dArray) -> usize;
 }
 #[repr(C)]
 #[repr(align(8))]
 #[derive(Debug, Default, Copy, Clone)]
-pub struct cusd_GeomSubset {
-    pub _bindgen_opaque_blob: [u64; 3usize],
+pub struct cusd_Vec2dArray {
+    pub _bindgen_opaque_blob: [u64; 5usize],
 }
 #[test]
-fn bindgen_test_layout_cusd_GeomSubset() {
+fn bindgen_test_layout_cusd_Vec2dArray() {
     assert_eq!(
-        ::std::mem::size_of::<cusd_GeomSubset>(),
-        24usize,
-        concat!("Size of: ", stringify!(cusd_GeomSubset))
+        ::std::mem::size_of::<cusd_Vec2dArray>(),
+        40usize,
+        concat!("Size of: ", stringify!(cusd_Vec2dArray))
     );
     assert_eq!(
-        ::std::mem::align_of::<cusd_GeomSubset>(),
+        ::std::mem::align_of::<cusd_Vec2dArray>(),
         8usize,
-        concat!("Alignment of ", stringify!(cusd_GeomSubset))
+        concat!("Alignment of ", stringify!(cusd_Vec2dArray))
     );
 }
 extern "C" {
-    pub fn cusd_GeomSubset_free(binding: *const cusd_GeomSubset);
+    pub fn cusd_Vec2dArray_free(binding: *const cusd_Vec2dArray);
+}
+extern "C" {
+    pub fn cusd_Vec2dArray_pointer(binding: *const cusd_Vec2dArray) -> *const f64;
+}
+extern "C" {
+    pub fn cusd_Vec2dArray_size(binding: *const cusd_Vec2dArray) -> usize;
 }
 #[repr(C)]
 #[repr(align(8))]
 #[derive(Debug, Default, Copy, Clone)]
-pub struct cusd_GeomSubsetVector {
-    pub _bindgen_opaque_blob: [u64; 3usize],
+pub struct cusd_FloatArray {
+    pub _bindgen_opaque_blob: [u64; 5usize],
 }
 #[test]
-fn bindgen_test_layout_cusd_GeomSubsetVector() {
+fn bindgen_test_layout_cusd_FloatArray() {
     assert_eq!(
-        ::std::mem::size_of::<cusd_GeomSubsetVector>(),
-        24usize,
-        concat!("Size of: ", stringify!(cusd_GeomSubsetVector))
+        ::std::mem::size_of::<cusd_FloatArray>(),
+        40usize,
+        concat!("Size of: ", stringify!(cusd_FloatArray))
     );
     assert_eq!(
-        ::std::mem::align_of::<cusd_GeomSubsetVector>(),
+        ::std::mem::align_of::<cusd_FloatArray>(),
         8usize,
-        concat!("Alignment of ", stringify!(cusd_GeomSubsetVector))
+        concat!("Alignment of ", stringify!(cusd_FloatArray))
     );
 }
 extern "C" {
-    pub fn cusd_GeomSubsetVector_free(binding: *const cusd_GeomSubsetVector);
+    pub fn cusd_FloatArray_free(binding: *const cusd_FloatArray);
 }
 extern "C" {
-    pub fn cusd_GeomSubsetVector_pointer(
-        binding: *const cusd_GeomSubsetVector,
-    ) -> *const cusd_GeomSubset;
+    pub fn cusd_FloatArray_pointer(binding: *const cusd_FloatArray) -> *const f32;
 }
 extern "C" {
-    pub fn cusd_GeomSubsetVector_size(binding: *const cusd_GeomSubsetVector) -> usize;
-}
-#[repr(C)]
-#[repr(align(8))]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct cusd_ShadeShader {
-    pub _bindgen_opaque_blob: [u64; 3usize],
-}
-#[test]
-fn bindgen_test_layout_cusd_ShadeShader() {
-    assert_eq!(
-        ::std::mem::size_of::<cusd_ShadeShader>(),
-        24usize,
-        concat!("Size of: ", stringify!(cusd_ShadeShader))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<cusd_ShadeShader>(),
-        8usize,
-        concat!("Alignment of ", stringify!(cusd_ShadeShader))
-    );
-}
-extern "C" {
-    pub fn cusd_ShadeShader_free(binding: *const cusd_ShadeShader);
-}
-#[repr(C)]
-#[repr(align(8))]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct cusd_ShadeInput {
-    pub _bindgen_opaque_blob: [u64; 4usize],
-}
-#[test]
-fn bindgen_test_layout_cusd_ShadeInput() {
-    assert_eq!(
-        ::std::mem::size_of::<cusd_ShadeInput>(),
-        32usize,
-        concat!("Size of: ", stringify!(cusd_ShadeInput))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<cusd_ShadeInput>(),
-        8usize,
-        concat!("Alignment of ", stringify!(cusd_ShadeInput))
-    );
-}
-extern "C" {
-    pub fn cusd_ShadeInput_free(binding: *const cusd_ShadeInput);
+    pub fn cusd_FloatArray_size(binding: *const cusd_FloatArray) -> usize;
 }
 #[repr(C)]
 #[repr(align(8))]
@@ -470,6 +464,58 @@ extern "C" {
 extern "C" {
     pub fn cusd_LayerVector_size(binding: *const cusd_LayerVector) -> usize;
 }
+#[repr(C)]
+#[repr(align(8))]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct cusd_PrimSiblingRange {
+    pub _bindgen_opaque_blob: [u64; 10usize],
+}
+#[test]
+fn bindgen_test_layout_cusd_PrimSiblingRange() {
+    assert_eq!(
+        ::std::mem::size_of::<cusd_PrimSiblingRange>(),
+        80usize,
+        concat!("Size of: ", stringify!(cusd_PrimSiblingRange))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<cusd_PrimSiblingRange>(),
+        8usize,
+        concat!("Alignment of ", stringify!(cusd_PrimSiblingRange))
+    );
+}
+extern "C" {
+    pub fn cusd_PrimSiblingRange_free(binding: *const cusd_PrimSiblingRange);
+}
+#[repr(C)]
+#[repr(align(8))]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct cusd_AttributeVector {
+    pub _bindgen_opaque_blob: [u64; 3usize],
+}
+#[test]
+fn bindgen_test_layout_cusd_AttributeVector() {
+    assert_eq!(
+        ::std::mem::size_of::<cusd_AttributeVector>(),
+        24usize,
+        concat!("Size of: ", stringify!(cusd_AttributeVector))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<cusd_AttributeVector>(),
+        8usize,
+        concat!("Alignment of ", stringify!(cusd_AttributeVector))
+    );
+}
+extern "C" {
+    pub fn cusd_AttributeVector_free(binding: *const cusd_AttributeVector);
+}
+extern "C" {
+    pub fn cusd_AttributeVector_pointer(
+        binding: *const cusd_AttributeVector,
+    ) -> *const cusd_Attribute;
+}
+extern "C" {
+    pub fn cusd_AttributeVector_size(binding: *const cusd_AttributeVector) -> usize;
+}
 extern "C" {
     pub fn cusd_Stage_open(filename: *const ::std::os::raw::c_char) -> *mut cusd_Stage;
 }
@@ -483,6 +529,9 @@ extern "C" {
     pub fn cusd_Stage_get_used_layers(stage: *const cusd_Stage) -> cusd_LayerVector;
 }
 extern "C" {
+    pub fn cusd_String_default() -> cusd_String;
+}
+extern "C" {
     pub fn cusd_Layer_get_path(layer: *const cusd_Layer, out_string: *mut cusd_String) -> bool;
 }
 extern "C" {
@@ -493,6 +542,12 @@ extern "C" {
 }
 extern "C" {
     pub fn cusd_PrimRange_next(iterator: *mut cusd_PrimRange) -> cusd_Prim;
+}
+extern "C" {
+    pub fn cusd_PrimSiblingRange_is_empty(iterator: *const cusd_PrimSiblingRange) -> bool;
+}
+extern "C" {
+    pub fn cusd_PrimSiblingRange_next(iterator: *mut cusd_PrimSiblingRange) -> cusd_Prim;
 }
 extern "C" {
     pub fn cusd_Prim_get_type_name(prim: *const cusd_Prim) -> *const ::std::os::raw::c_char;
@@ -508,6 +563,9 @@ extern "C" {
         token: *const cusd_Token,
         out_attribute: *mut cusd_Attribute,
     ) -> bool;
+}
+extern "C" {
+    pub fn cusd_Prim_get_attributes(prim: *const cusd_Prim) -> cusd_AttributeVector;
 }
 extern "C" {
     pub fn cusd_Attribute_get_double(attribute: *const cusd_Attribute) -> f64;
@@ -526,6 +584,12 @@ extern "C" {
     pub fn cusd_Attribute_get_int_array(attribute: *const cusd_Attribute) -> cusd_IntArray;
 }
 extern "C" {
+    pub fn cusd_Attribute_get_int64_array(attribute: *const cusd_Attribute) -> cusd_Int64Array;
+}
+extern "C" {
+    pub fn cusd_Attribute_get_token(attribute: *const cusd_Attribute) -> *mut cusd_Token;
+}
+extern "C" {
     pub fn cusd_Attribute_get_token_metadata(
         attribute: *const cusd_Attribute,
         name: *const cusd_Token,
@@ -539,51 +603,75 @@ extern "C" {
     pub fn cusd_Attribute_get_vec2f_array(attribute: *const cusd_Attribute) -> cusd_Vec2fArray;
 }
 extern "C" {
-    pub fn cusd_Prim_compute_bound_material(prim: *const cusd_Prim) -> cusd_ShadeMaterial;
+    pub fn cusd_Attribute_get_vec3d_array(attribute: *const cusd_Attribute) -> cusd_Vec3dArray;
 }
 extern "C" {
-    pub fn cusd_GeomSubset_compute_bound_material(
-        subset: *const cusd_GeomSubset,
-    ) -> cusd_ShadeMaterial;
+    pub fn cusd_Attribute_get_vec2d_array(attribute: *const cusd_Attribute) -> cusd_Vec2dArray;
 }
 extern "C" {
-    pub fn cusd_ShadeMaterial_compute_surface_source(
-        material: *const cusd_ShadeMaterial,
-        shader: *mut cusd_ShadeShader,
+    pub fn cusd_Attribute_get_float_array(attribute: *const cusd_Attribute) -> cusd_FloatArray;
+}
+extern "C" {
+    pub fn cusd_Attribute_get_bool(attribute: *const cusd_Attribute) -> bool;
+}
+extern "C" {
+    pub fn cusd_Attribute_get_float(attribute: *const cusd_Attribute) -> f32;
+}
+extern "C" {
+    pub fn cusd_Attribute_get_int(attribute: *const cusd_Attribute) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn cusd_Attribute_get_string(attribute: *const cusd_Attribute, output: *mut cusd_String);
+}
+extern "C" {
+    pub fn cusd_Attribute_get_vec3f(attribute: *const cusd_Attribute, output: *mut f32);
+}
+extern "C" {
+    pub fn cusd_Attribute_get_vec2f(attribute: *const cusd_Attribute, output: *mut f32);
+}
+extern "C" {
+    pub fn cusd_Attribute_get_vec3d(attribute: *const cusd_Attribute, output: *mut f64);
+}
+extern "C" {
+    pub fn cusd_Attribute_get_vec2d(attribute: *const cusd_Attribute, output: *mut f64);
+}
+extern "C" {
+    pub fn cusd_Prim_compute_bound_material(prim: *const cusd_Prim) -> cusd_Prim;
+}
+extern "C" {
+    pub fn cusd_Prim_compute_material_surface_source(
+        material: *const cusd_Prim,
+        shader_prim: *mut cusd_Prim,
     ) -> bool;
 }
 extern "C" {
-    pub fn cusd_ShadeShader_get_input(
-        shader: *const cusd_ShadeShader,
-        name: *const cusd_Token,
-        out_input: *mut cusd_ShadeInput,
-    ) -> bool;
-}
-extern "C" {
-    pub fn cusd_ShadeInput_get_resolved_path(
-        input: *const cusd_ShadeInput,
+    pub fn cusd_Attribute_get_resolved_path(
+        attribute: *const cusd_Attribute,
         out_path: *mut cusd_String,
     ) -> bool;
 }
 extern "C" {
-    pub fn cusd_ShadeInput_get_connected_sources(
-        input: *const cusd_ShadeInput,
+    pub fn cusd_Attribute_get_connected_shade_sources(
+        attribute: *const cusd_Attribute,
     ) -> cusd_ShadeSourceInfoVector;
 }
 extern "C" {
-    pub fn cusd_Prim_get_all_subsets(prim: *const cusd_Prim) -> cusd_GeomSubsetVector;
-}
-extern "C" {
-    pub fn cusd_GeomSubset_get_indices_attr(subset: *const cusd_GeomSubset) -> cusd_Attribute;
+    pub fn cusd_Prim_get_all_children(prim: *const cusd_Prim) -> cusd_PrimSiblingRange;
 }
 extern "C" {
     pub fn cusd_ShadeConnectionSourceInfo_source(
         source_info: *const cusd_ShadeConnectionSourceInfo,
-    ) -> cusd_ShadeShader;
+    ) -> cusd_Prim;
 }
 extern "C" {
     pub fn cusd_Token_new(text: *const ::std::os::raw::c_char) -> *mut cusd_Token;
 }
 extern "C" {
     pub fn cusd_Token_equal(a: *const cusd_Token, b: *const cusd_Token) -> bool;
+}
+extern "C" {
+    pub fn cusd_Attribute_get_base_name(attribute: *const cusd_Attribute) -> *mut cusd_Token;
+}
+extern "C" {
+    pub fn cusd_Attribute_get_namespace(attribute: *const cusd_Attribute) -> *mut cusd_Token;
 }
