@@ -1,8 +1,4 @@
-mod bindings;
-mod rust;
-use std::mem::ManuallyDrop;
-
-use rust::*;
+use usd_rs::*;
 
 fn main() {
     let filename = std::env::args().nth(1).unwrap();
@@ -19,23 +15,33 @@ fn main() {
 
     for prim in stage.iter_prims() {
         for attr in &*prim.get_attributes() {
+            if !attr.has_value() {
+                continue;
+            }
+
             if matches!(
                 attr.get_type_name().to_bytes(),
                 b"GfMatrix4d"
-                    | b"VtArray<TfToken>"
                     | b"SdfAssetPath"
                     | b"VtArray<GfQuath>"
-                    | b"GfVec4f"
                     | b"VtArray<GfQuatf>"
                     | b"VtArray<GfVec4f>"
                     | b"VtArray<std::string>"
-                    | b"VtArray<double>"
-                    | b"GfQuatf"
             ) {
                 dbg!(attr.get_type_name());
                 continue;
             }
-            if attr.get_value().is_none() {
+            if attr.get_value().is_none()
+                && !matches!(
+                    attr.get_type_name().to_bytes(),
+                    b"std::string"
+                        | b"VtArray<float>"
+                        | b"VtArray<GfVec3f>"
+                        | b"VtArray<GfVec2f>"
+                        | b"GfQuatf"
+                )
+            {
+                dbg!(&prim.get_type_name());
                 println!("{}:{}", &*attr.get_namespace(), &*attr.get_base_name());
                 panic!();
             }
