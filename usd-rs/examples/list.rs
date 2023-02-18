@@ -32,17 +32,10 @@ fn main() {
                 continue;
             }
             if attr.get_value().is_none()
-                && !matches!(
-                    attr.get_type_name().to_bytes(),
-                    b"std::string"
-                        | b"VtArray<float>"
-                        | b"VtArray<GfVec3f>"
-                        | b"VtArray<GfVec2f>"
-                        | b"GfQuatf"
-                )
             {
-                dbg!(&prim.get_type_name());
                 println!("{}:{}", &*attr.get_namespace(), &*attr.get_base_name());
+                dbg!(&attr.get_type_name());
+                dbg!(&prim.get_type_name());
                 panic!();
             }
         }

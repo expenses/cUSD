@@ -6,16 +6,12 @@
 #include <pxr/usd/usd/stage.h>
 // We only need usdGeom for xformCache, which is something
 // that could potentially be replaced by a Rust impl.
-#include <iostream>
 #include <pxr/usd/usdGeom/xformCache.h>
 #include <pxr/usd/usdShade/materialBindingAPI.h>
 
 // Wish C/C++ had hygenic macros :(
 #define GENERATE_FREE(NAME, INNER_TYPE)                                                                                \
-    \                                        
-    void NAME##_free(const NAME *binding) {                                                                            \
-        INNER_TYPE transmuted = transmute<INNER_TYPE>(*binding);                                                       \
-    }
+    void NAME##_free(const NAME *binding) { INNER_TYPE transmuted = transmute<INNER_TYPE>(*binding); }
 
 #define GENERATE_POINTER_AND_SIZE_FNS(NAME, INNER_TYPE, ITEM_TYPE)                                                     \
     const ITEM_TYPE *NAME##_pointer(const NAME *binding) {                                                             \
@@ -68,7 +64,7 @@ extern "C"
         return transmute<cusd_Stage>(pxr::UsdStage::Open(filename));
     }
 
-    const cusd_PrimRange cusd_Stage_iter_prims(const cusd_Stage *stage) {
+    cusd_PrimRange cusd_Stage_iter_prims(const cusd_Stage *stage) {
         auto stage_ptr = *reinterpret_cast<const pxr::UsdStageRefPtr *>(stage);
         return transmute<cusd_PrimRange>(pxr::UsdPrimRange::Stage(stage_ptr));
     }
@@ -91,7 +87,7 @@ extern "C"
             return false;
         }
 
-        *reinterpret_cast<std::string *>(out_string) = path.GetPathString();
+        *reinterpret_cast<std::string *>(out_string) = std::move(path.GetPathString());
 
         return true;
     }
@@ -129,6 +125,18 @@ extern "C"
         return reinterpret_cast<const pxr::UsdAttribute *>(attribute)->GetTypeName().GetCPPTypeName().data();
     }
 
+    bool cusd_Prim_get_parent(const cusd_Prim *prim, cusd_Prim* prim_parent) {
+        pxr::UsdPrim parent = reinterpret_cast<const pxr::UsdPrim *>(prim)->GetParent();
+
+        if (!parent) {
+            return false;
+        }
+
+        *reinterpret_cast<pxr::UsdPrim *>(prim_parent) = std::move(parent);
+
+        return true;
+    }
+
     bool cusd_Prim_get_attribute(const cusd_Prim *prim, const cusd_Token *token, cusd_Attribute *out_attribute) {
         pxr::UsdAttribute attribute =
             reinterpret_cast<const pxr::UsdPrim *>(prim)->GetAttribute(*reinterpret_cast<const pxr::TfToken *>(token));
@@ -136,7 +144,7 @@ extern "C"
             return false;
         }
 
-        *reinterpret_cast<pxr::UsdAttribute *>(out_attribute) = attribute;
+        *reinterpret_cast<pxr::UsdAttribute *>(out_attribute) = std::move(attribute);
 
         return true;
     }
@@ -170,9 +178,13 @@ extern "C"
     }
 
     void cusd_GeomXformCache_get_transform(cusd_GeomXformCache *cache, const cusd_Prim *prim, double *array) {
-        pxr::GfMatrix4d transform = reinterpret_cast<pxr::UsdGeomXformCache *>(cache)->GetLocalToWorldTransform(
-            *reinterpret_cast<const pxr::UsdPrim *>(prim));
-        memcpy(array, transform.data(), sizeof(double) * 16);
+        const pxr::UsdPrim* usd_prim = reinterpret_cast<const pxr::UsdPrim *>(prim);
+        const pxr::UsdPrim& usd_prim_ref = *usd_prim;
+        pxr::UsdGeomXformCache* usd_cache = reinterpret_cast<pxr::UsdGeomXformCache *>(cache);
+
+        *reinterpret_cast<pxr::GfMatrix4d *>(array) = usd_cache->GetLocalToWorldTransform(
+            usd_prim_ref
+        );
     }
 
     cusd_VtArray cusd_Attribute_get_int_array(const cusd_Attribute *attribute) {
@@ -201,12 +213,12 @@ extern "C"
 
     bool cusd_Attribute_get_vec3f_array(const cusd_Attribute *attribute, cusd_VtArray *value) {
         return reinterpret_cast<const pxr::UsdAttribute *>(attribute)->Get(
-            reinterpret_cast<pxr::VtArray<pxr::GfVec3f> *>(value));
+            reinterpret_cast<pxr::VtArray<pxr::GfVec3f> *>(value), pxr::UsdTimeCode::EarliestTime());
     }
 
     bool cusd_Attribute_get_vec2f_array(const cusd_Attribute *attribute, cusd_VtArray *value) {
         return reinterpret_cast<const pxr::UsdAttribute *>(attribute)->Get(
-            reinterpret_cast<pxr::VtArray<pxr::GfVec2f> *>(value));
+            reinterpret_cast<pxr::VtArray<pxr::GfVec2f> *>(value), pxr::UsdTimeCode::EarliestTime());
     }
 
     bool cusd_Attribute_get_vec3d_array(const cusd_Attribute *attribute, cusd_VtArray *value) {
@@ -221,7 +233,7 @@ extern "C"
 
     bool cusd_Attribute_get_float_array(const cusd_Attribute *attribute, cusd_VtArray *value) {
         return reinterpret_cast<const pxr::UsdAttribute *>(attribute)->Get(
-            reinterpret_cast<pxr::VtArray<float> *>(value));
+            reinterpret_cast<pxr::VtArray<float> *>(value), pxr::UsdTimeCode::EarliestTime());
     }
 
     bool cusd_Attribute_get_token_array(const cusd_Attribute *attribute, cusd_VtArray *value) {
@@ -261,7 +273,7 @@ extern "C"
 
     bool cusd_Attribute_get_string(const cusd_Attribute *attribute, cusd_String *value) {
         std::string output_tmp;
-        if (!reinterpret_cast<const pxr::UsdAttribute *>(attribute)->Get(&output_tmp)) {
+        if (!reinterpret_cast<const pxr::UsdAttribute *>(attribute)->Get(&output_tmp, pxr::UsdTimeCode::EarliestTime())) {
             return false;
         }
         if (output_tmp.size() > 0) {
@@ -272,7 +284,7 @@ extern "C"
     }
 
     bool cusd_Attribute_get_quatf(const cusd_Attribute *attribute, float *value) {
-        return reinterpret_cast<const pxr::UsdAttribute *>(attribute)->Get(reinterpret_cast<pxr::GfQuatf *>(value));
+        return reinterpret_cast<const pxr::UsdAttribute *>(attribute)->Get(reinterpret_cast<pxr::GfQuatf *>(value), pxr::UsdTimeCode::EarliestTime());
     }
 
     bool cusd_Attribute_get_vec4f(const cusd_Attribute *attribute, float *value) {
@@ -293,6 +305,10 @@ extern "C"
 
     bool cusd_Attribute_get_vec2d(const cusd_Attribute *attribute, double *value) {
         return reinterpret_cast<const pxr::UsdAttribute *>(attribute)->Get(reinterpret_cast<pxr::GfVec2d *>(value));
+    }
+
+    bool cusd_Attribute_get_matrix4d(const cusd_Attribute *attribute, double *value) {
+        return reinterpret_cast<const pxr::UsdAttribute *>(attribute)->Get(reinterpret_cast<pxr::GfMatrix4d *>(value));   
     }
 
     cusd_Prim cusd_Prim_compute_bound_material(const cusd_Prim *prim) {
@@ -324,7 +340,7 @@ extern "C"
             return false;
         }
 
-        *reinterpret_cast<std::string *>(out_path) = resolved_path;
+        *reinterpret_cast<std::string *>(out_path) = std::move(resolved_path);
 
         return true;
     }

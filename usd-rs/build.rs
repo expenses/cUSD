@@ -10,6 +10,9 @@ fn main() {
     let cpp_filename_str = cpp_filename.to_str().unwrap();
 
     cc::Build::new()
+        // Struct sizes are compiler dependent. See `CLANG_XFORM_CACHE_SIZE`
+        // in cusd.h
+        .compiler("clang")
         .cpp(true)
         .file(&cpp_filename_str)
         .include(&usd_include_path)

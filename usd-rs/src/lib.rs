@@ -242,6 +242,7 @@ pub enum AttributeValue {
     Vec2d([f64; 2]),
     Vec4f([f32; 4]),
     Quatf([f32; 4]),
+    Matrix4d([f64; 16]),
     Int(i32),
     String(CusdString),
 }
@@ -290,6 +291,7 @@ impl Attribute {
             b"GfVec2f" => AttributeValue::Vec2f(self.get_vec2f()?),
             b"GfVec3d" => AttributeValue::Vec3d(self.get_vec3d()?),
             b"GfVec2d" => AttributeValue::Vec2d(self.get_vec2d()?),
+            b"GfMatrix4d" => AttributeValue::Matrix4d(self.get_matrix4d()?),
             b"int" => AttributeValue::Int(self.get_int()),
             b"std::string" => AttributeValue::String(self.get_string()?),
             b"VtArray<int64_t>" => AttributeValue::Int64Array(self.get_int64_array()),
@@ -348,6 +350,10 @@ impl Attribute {
     pub fn get_vec3f_array(&self) -> Option<VtArray<[f32; 3]>> {
         get_checked(|value| unsafe { cusd_Attribute_get_vec3f_array(&self.inner, value) })
             .map(VtArray::new)
+    }
+
+    pub fn get_matrix4d(&self) -> Option<[f64; 16]> {
+        get_checked_array(|value| unsafe { cusd_Attribute_get_matrix4d(&self.inner, value) })
     }
 
     pub fn get_token_array(&self) -> Option<VtArray<Token>> {
@@ -486,6 +492,10 @@ deref_into_slice!(
 generate_binding!(Prim, cusd_Prim, cusd_Prim_free);
 
 impl Prim {
+    pub fn get_parent(&self) -> Option<Prim> {
+        get_checked(|value| unsafe { cusd_Prim_get_parent(&self.inner, value) }).map(|inner| Self {inner})
+    }
+
     pub fn get_type_name(&self) -> &std::ffi::CStr {
         unsafe { std::ffi::CStr::from_ptr(cusd_Prim_get_type_name(&self.inner)) }
     }
@@ -533,11 +543,15 @@ impl Prim {
     }
 }
 
-generate_binding!(
+/*generate_binding!(
     GeomXformCache,
     cusd_GeomXformCache,
     cusd_GeomXformCache_free
-);
+);*/
+
+pub struct GeomXformCache {
+    inner: cusd_GeomXformCache
+}
 
 impl GeomXformCache {
     pub fn new() -> Self {
